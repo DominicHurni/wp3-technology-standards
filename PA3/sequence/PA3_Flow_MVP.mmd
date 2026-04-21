@@ -3,6 +3,7 @@ sequenceDiagram
     actor UBOs
     participant EUDIWallet_Initiator
     participant Company_Wallet
+    participant TR
     participant Bank_System
     participant Bank_Wallet
     participant Bank_InternalSystem
@@ -11,7 +12,7 @@ sequenceDiagram
 
     Note over Initiator,Bank_Wallet: Scenario 1
 
-    Initiator->>+Bank_System: Select option - open business account
+    Initiator->>+Bank_System: Select "open business account"
     critical LegalEntity Selection
     option Option1.Support_EUBW_Directory_List
         Bank_System->>+Bank_System : Provide the list of available legal entities
@@ -22,6 +23,7 @@ sequenceDiagram
         Initiator->>+Bank_System: fill the address or end-point of the business wallet
         Bank_System->>+Bank_System: resolve the endpoint of the address
     option Option3.Support directly into EUBW
+        Note over Company_Wallet: the company wallet already integrate the business process of specific banks
         Initiator->>+Company_Wallet: Select bank in the EUBW (configured in wallet)
     option Option4. Other: manual process (EUBW or EUDI Wallet)
         Note over Company_Wallet: manuall proces by the initiator
@@ -68,24 +70,23 @@ sequenceDiagram
     end
     Bank_System<<->>Bank_Wallet: verification of attestations (rulebook)
 
+    Note right of Bank_System: Perform UBO Calculation based on the OwnerShip/ControlList
+    Bank_System->>Bank_System: additionally check UBO List(calculated) vs UBO List (Company) and in case of discrepancies inform the company
+
     Note over Initiator,Bank_Wallet: Additionally KYC information from Transparency Register
     Bank_System<<->>Bank_Wallet: generate request for UBOList (TR)
     critical
-    option Automatically (EUBW support end-points)
+    option Option1. From Company Wallet
         Bank_System->>+Company_Wallet: request presentations
         Company_Wallet<<->>Company_Wallet: check the request authorization (automatically acceptance)
         Company_Wallet->>Bank_System: present the attestations
-    option Manually ( EUBW or EUDI Wallet)
-        Bank_System->>Bank_System: embed request into QRCode and provide a DeepLink for the request
-        Initiator->>+Company_Wallet: copy/paste deep-link presentation into the company wallet or scan the QRCode
-        Company_Wallet->>+Company_Wallet: check the request authorization (manual process)
-        Company_Wallet->>Bank_System: present the attestations
+    option Option2. From Transaprency Register
+        Bank_System->>+TR: request presentations
+        TR<<->>TR: check the request authorization (automatically acceptance)
+        TR->>Bank_System: present the attestations
     end
     Bank_System<<->>Bank_Wallet: verification of attestations (rulebook)
-
-    Note right of Bank_System: Perform UBO Calculation based on the OwnerShip/ControlList <br/> Cross-Check Against Presented UBO List  in case of discrepancies inform<br/> Cross-Check Against UBO List from Transparency Register , in case of discrepancies report
-    Bank_System->>Bank_System: compare the UBO Lists
-    Bank_System->>Bank_System: in case discrepancy with the UBOList(TR) report it
+    Bank_System->>Bank_System: additionally check UBO List(calculated) vs UBO List (TR) and in case of discrepancies inform the TR
 
     Note over Initiator,Bank_Wallet: UBO Verification
     Bank_System<<->>Bank_System: Start UBO Identity Verification for each UBO in the list
