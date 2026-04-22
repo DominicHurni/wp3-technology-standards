@@ -32,6 +32,10 @@ sequenceDiagram
 ::include{file=block1.puml}
 ```
 
+@import "block1.puml"
+@import "block1.mmd"
+
+
 @import "[block1.mmd](https://github.com/flo0x/wp3-technology-standards/blob/main/PA3/block1.mmd)"{class="mermaid"}
 
 @import "test.png" {width="300px" height="200px" title="my title" alt="my alt"}
