@@ -27,11 +27,6 @@ sequenceDiagram
     Initiator ->>+Bank_Portal : Selects "Open Business Account" service
 ```
 
+@import "block1.mmd"{class="mermaid"}
 
-mermaid {% include block1.mmd %}
-
-
-
-
-
-
+@import "test.png" {width="300px" height="200px" title="my title" alt="my alt"}
