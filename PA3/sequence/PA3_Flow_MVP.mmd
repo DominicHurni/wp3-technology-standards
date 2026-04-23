@@ -1,8 +1,6 @@
 sequenceDiagram
     actor Initiator
-    participant EUDIWallet_Initiator
     actor UBOs
-    participant EUDIWallet
     actor LegalRepr
     participant EUDIWallet
     participant Company_Wallet
@@ -35,13 +33,13 @@ sequenceDiagram
     critical
     option Option1.PID
         Bank_Portal<<->>Bank_Wallet: generate request to identity initiator (PID) and embed into QRCode
-        Initiator->>+EUDIWallet_Initiator : scans QR Code with personal wallet to authenticate for Identification process
-        EUDIWallet_Initiator->>+EUDIWallet_Initiator : mutual authentification ( auth. certificate )
-        Initiator->>+EUDIWallet_Initiator : check the authorization to present requested attestations (visual check)
-        EUDIWallet_Initiator->Bank_Portal : send the pid information
+        Initiator->>+EUDIWallet : scans QR Code with personal wallet
+        EUDIWallet->>+EUDIWallet : mutual authentification ( auth. certificate )
+        Initiator->>+EUDIWallet : check the authorization for presentation (visual check)
+        EUDIWallet->Bank_Portal : send the pid information
         Bank_Portal<<->>Bank_Wallet: verification of PID  (rulebook)
     option Option2.Other identification
-        Note over EUDIWallet_Initiator: identification of the person with other identfication means (ex. eID)
+        Note over EUDIWallet: identification of the person with other identfication means (ex. eID)
     end
 
     Note over Initiator,Bank_Wallet: Scenario 1.LegalEntity Identification
@@ -60,7 +58,7 @@ sequenceDiagram
         Company_Wallet->>Bank_Portal: present the attestations
     end
     Bank_Portal<<->>Bank_Wallet: verification of attestations rulebooks
-    Note over EUDIWallet_Initiator: assumption the Initiator is a legal representive, if not this will be part of MVP+
+    Note over EUDIWallet: assumption the Initiator is a legal representive, if not this will be part of MVP+
 
     Note over Initiator,Bank_Wallet: Scenario 1. Addtionally KYC information
     Bank_Portal<<->>Bank_Wallet: generate request for OwnershipList, Controllist, UBOList, SignatoryRights
