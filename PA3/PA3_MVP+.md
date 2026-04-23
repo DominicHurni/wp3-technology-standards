@@ -1,14 +1,14 @@
-# PA3 MVP Workflow
+# PA3 MVP+ Workflow
 
 MVP Restrictions:
 
-- One-person GmbH: the account initiator is the sole legal representative, who is also the UBO and contact person for the bank relationship.
-- No additional signatory rights are required.
-- The process is executed in a single step, including immediate IBAN issuance/attestation.
+- no restriction in regard to initiator, legal repr and ubo list  
+- no restriction in regard to signatory rights
+- no restriction in regard to IBAN request (wih delay)
 - Mutual authentication is default true (no TLOL or device binding checks applied).
 - The company is authorized to present the credential and receive attestation
-- The company is not branch 
-- The company is not risk-related company. 
+- The company is a branch
+- The company is risk-related company (sanction list check is required)
 
 ## Pre-requisites
 This are the Pre-requisites for the company and bank in order to run the MVP.
@@ -29,19 +29,21 @@ sequenceDiagram
              Company ->> Company: issue TAX,VAT
     end 
     critical
-        option Initator POR required  
-            Company ->> Company: issue PoR for Initiator
+        option Initator POA required  
+            Company ->> Company: issue PoA for Initiator
         option SR POA required
             Company ->> Company: issue PoA for SignatoryRights Persons
     end                
     Company ->> Company: issue CompanyInfo, ContactPerson
-    Company ->> Company: issue OwnerList, CntrolList, UBO
+    Company ->> Company: issue OwnerList, CntrolList, UBOList
     Company ->> Company: issue SignatoryRights 
     Company ->> TransparencyRegister: submit the UBO 
+    TransparencyRegister ->> Company : issue UBOList(TR)
     Auth.Source ->> Bank : issue EBWOID
+    Auth.Source ->> Company : issue TFS 
 ```
 
-### 1. Scenario 1 
+### 1. Scenario 1
 
 ### 1.1. Legal Entity Selection
 ```mermaid
@@ -67,7 +69,7 @@ sequenceDiagram
     Person->>+Bank_Portal: trigger process
 ```
 
-### 1.2. Initiator Identification 
+### 1.2. Initiator Identification
 ```mermaid
 sequenceDiagram
     actor Person
@@ -124,8 +126,19 @@ sequenceDiagram
             Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own business configuration)
             Company_Wallet->>Bank_Portal: present the attestations
             Bank_Portal<<->>Bank_Wallet: verification of attestations rulebooks
-        option other(national-cases and cross-boarder cases) 
-           Note over Person,Bank_Wallet: This case will be handled in the MVP+
+        option natonal case and initiator is not legal representative
+            Bank_Portal<<->>Bank_Wallet: generate proof-request EU PoA
+            critical
+                option Automatically (EUBW support end-points)
+                    Bank_Portal->>+Company_Wallet: request presentations
+                option Manually ( EUBW or EUDI Wallet)
+                    Bank_Portal->>Bank_Portal: embed request into QRCode and provide a DeepLink for the request
+                    Person->>+Company_Wallet: copy/paste deep-link presentation into the company wallet or scan the QRCode
+            end
+            Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
+            Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own business configuration)
+            Company_Wallet->>Bank_Portal: present the attestations
+            Bank_Portal<<->>Bank_Wallet: verification of attestations rulebooks
     end   
 ```
 
@@ -142,14 +155,25 @@ sequenceDiagram
         option Manually ( EUBW or EUDI Wallet)
             Bank_Portal->>Bank_Portal: embed request into QRCode and provide a DeepLink for the request
             Person->>+Company_Wallet: copy/paste deep-link presentation into the company wallet or scan the QRCode
-        option is the company a branch
-            Note over Person,Bank_Wallet: This case will be handled in the MVP+
     end
     Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
     Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
     Company_Wallet->>Bank_Portal: present the attestations
     Bank_Portal<<->>Bank_Wallet: verification of attestations (rulebook)
-
+    
+    Bank_Portal->>Bank_Portal: provide input field to specify the endpoint of the corporate wallet 
+    critical
+        option Automatically (EUBW support end-points)
+            Bank_Portal->>+Company_Wallet: request presentations
+        option Manually ( EUBW or EUDI Wallet)
+            Bank_Portal->>Bank_Portal: embed request into QRCode and provide a DeepLink for the request
+            Person->>+Company_Wallet: copy/paste deep-link presentation into the company wallet or scan the QRCode
+    end
+    Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
+    Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
+    Company_Wallet->>Bank_Portal: present the attestations
+    Bank_Portal<<->>Bank_Wallet: verification of attestations (rulebook)
+    
     Note right of Bank_Portal: UBO Calculation is not part of the MVP. This is an internal process
     Bank_Portal->>Bank_Portal: UBO List will be automatically accepted.
 ```
@@ -166,35 +190,69 @@ sequenceDiagram
         Trans.Register<<->>Trans.Register: check the authorization of requester to present requested attestations (own business configuration or visual check)
         Trans.Register->>Bank_Portal: present the attestations
     option Option2. From Company Wallet - Automatically
-        Note over Company Wallet: This case will be handled in the MVP+
+        Bank_Portal->>+Company_Wallet: request presentations
+        Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
+        Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own business configuration or visual check)
+        Company_Wallet->>Bank_Portal: present the attestations
     end
     Bank_Portal<<->>Bank_Wallet: verification of attestations (rulebook)
     Bank_Portal->>Bank_Portal: cross-check the identification data of the UBOs from both UBO Lists
     Note right of Bank_Portal: Reporting is not part of the MVP. This is an internal process
 ```
 
-### 1.7. UBOs Verification 
+### 1.7. UBOs Verification
 ```mermaid
 sequenceDiagram
+    UBOs->>Bank_Portal: open the link
     critical
-        option UBO online (PID)
-            UBOs->>Bank_Portal: open the link
-            Bank_Portal<<->>EUDIWallet: generate request for PID and embed into QRCode
+        option UBO online (PID or PASS
+            Bank_Portal<<->>EUDIWallet: generate request for PID/PASS and embed into QRCode
             UBOs->>EUDIWallet: scans QR Code with personal wallet to authenticate for Verification process
             EUDIWallet->>+EUDIWallet : mutual authentification ( auth. certificate )
             Initiator->>+EUDIWallet : check the authorization to present requested attestations (visual check)
             EUDIWallet->>Bank_Wallet: present the attestations
             Bank_Portal<<->>Bank_Wallet: verification of attestations (PID rulebook)
             Bank_Portal<<->>Bank_Portal: cross_check attestation data against UBO submitted data (or part of request: Temporal Validity)
-        option other 
-            Note right of Bank_Portal: This cases will be handled in the MVP+ (ex. online,offline, videoident
+        option UBO Offline 
+            Bank_Portal<<->>Bank_Wallet: generate request for EU POA 
+            critical 
+                option Automatically (EUBW support end-points)
+                    Bank_Portal->>+Company_Wallet: request presentations
+                option Manually ( EUBW or EUDI Wallet)
+                    Bank_Portal->>Bank_Portal: embed request into QRCode and provide a DeepLink for the request
+                    Person->>+Company_Wallet: copy/paste deep-link presentation into the company wallet or scan the QRCode
+                option other
+                    Note right of Bank_Portal: Use the video ident
+            end 
+            Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
+            Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
+            Company_Wallet->>Bank_Portal: present the attestations
+            Bank_Portal<<->>Bank_Wallet: verification of attestations (rulebook)
+        option Other 
+             Bank_Portal<<->>Bank_Wallet: usew the video ident
     end
 ```
 
-### 1.8. Sanction check (this will be handled in the MVP+)
-This will be handled in the MVP+
+### 1.8. Sanction check 
 
-### 1.9. Cross-Check  
+```mermaid
+sequenceDiagram
+    actor Person
+    Bank_Portal<<->>Bank_Wallet: generate proof-request TFS 
+    critical
+    option Automatically (EUBW support end-points)
+        Bank_Portal->>+Company_Wallet: request presentations
+    option Manually ( EUBW or EUDI Wallet)
+        Bank_Portal->>Bank_Portal: embed request into QRCode and provide a DeepLink for the request
+        Person->>+Company_Wallet: copy/paste deep-link presentation into the company wallet or scan the QRCode
+    end
+    Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
+    Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own business configuration)
+    Company_Wallet->>Bank_Portal: present the attestations
+    Bank_Portal<<->>Bank_Wallet: verification of attestations rulebooks
+```
+
+### 1.9. Cross-Check
 ```mermaid
 sequenceDiagram
     Bank_Portal<<->>Bank_Portal: cross check over all attestations
@@ -205,28 +263,48 @@ sequenceDiagram
 
 ### 2. Scenario 2
 
-### 2.1. Contract signing 
+### 2.1. Contract signing
 
 ```mermaid
 sequenceDiagram
     actor Person
     participant EUDIWallet
+
     Bank_Portal->>+Bank_InternalSystem: Create the contract
     Bank_Portal->>+Bank_Portal: presents document to be signed and QR Code to authenticate for Signature
-    critical
-        option Person = Initiator
-            Person ->>+EUDIWallet: scans QR Code with personal wallet to authenticate for Signature
-            EUDIWallet->>+EUDIWallet:  mutual authentification ( over auth. certificate)
-            Person->>+EUDIWallet : check the authorization to present requested attestations (visual check)
-            EUDIWallet->Bank_Portal : send the pid information
-            Bank_Portal<<->>Bank_Wallet: verification of PID  (rulebook)
+    Person ->>+EUDIWallet: scans QR Code with personal wallet to authenticate for Signature
+    EUDIWallet->>+EUDIWallet:  mutual authentification ( over auth. certificate)
+    Person->>+EUDIWallet : check the authorization to present requested attestations (visual check)
+    EUDIWallet->Bank_Portal : send the pid information
+    Bank_Portal<<->>Bank_Wallet: verification of PID  (rulebook)
+
+    critical 
+        option Person is Initiator
             Bank_Portal<<->>Bank_Portal: Cross check against the EUCC
-            Person ->>+EUDIWallet: Register for QES Certificate
-            Person ->>+EUDIWallet: activates Signature with personal wallet
-            Person ->>+EUDIWallet: sign the contract
         option other
-            Note right of Bank_Portal: This cases will be handled in the MVP+ (legal repr or signatory rights with POA)
+            Bank_Portal<<->>Bank_Portal: Cross check against the EUCC and SR 
+            critical 
+                option person is not a legal representative 
+                    critical 
+                    Bank_Portal<<->>Bank_Wallet: generate proof-request EU POA  
+                    option Automatically (EUBW support end-points)
+                        Bank_Portal->>+Company_Wallet: request presentation POA 
+                    option Manually ( EUBW or EUDI Wallet)
+                        Bank_Portal->>Bank_Portal: embed request into QRCode and provide a DeepLink for the request
+                        Person->>+Company_Wallet: copy/paste deep-link presentation into the company wallet or scan the QRCode
+                    end
+                    Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
+                    Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own business configuration)
+                    Company_Wallet->>Bank_Portal: present the attestations
+                    Bank_Portal<<->>Bank_Wallet: verification of attestations rulebooks                    
+                option rest     
+            end
     end
+
+    Person ->>+EUDIWallet: Register for QES Certificate
+    Person ->>+EUDIWallet: activates Signature with personal wallet
+    Person ->>+EUDIWallet: sign the contract
+
     Bank_Wallet->>+Bank_Wallet: verifies collected attestations
     Bank_Wallet->>+Bank_Wallet: verifies QES
     Bank_Portal<<->>+Bank_InternalSystem : create the account
@@ -237,7 +315,39 @@ sequenceDiagram
 ### 3. Scenario 3
 
 ### 3.1. Onboarding process (this will be handled in the MVP+)
-This will be handled in the MVP+
+
+```mermaid
+sequenceDiagram
+    actor Person
+    participant EUDIWallet
+
+    Bank_Portal<<->>Bank_Wallet: generate request to identity Initiator (PID) and embed into QRCode
+    Person->>+EUDIWallet : scans QR Code with personal wallet
+    EUDIWallet->>+EUDIWallet : mutual authentification ( auth. certificate )
+    Person->>+EUDIWallet : check the authorization for presentation (visual check)
+    EUDIWallet->Bank_Portal : send the pid information
+    Bank_Portal<<->>Bank_Wallet: verification of PID  (rulebook)
+    Bank_Portal<<->>Bank_Portal: Cross check against the EUCC and SR
+    critical 
+        option person not onboarded and in EUCC
+            Bank_Portal<<->>SR Person : issue token 
+        option person not onboarded and in SR 
+            Bank_Portal<<->>Bank_Wallet: generate proof-request EU POA  
+            option Automatically (EUBW support end-points)
+                Bank_Portal->>+Company_Wallet: request presentation POA 
+            option Manually ( EUBW or EUDI Wallet)
+                Bank_Portal->>Bank_Portal: embed request into QRCode and provide a DeepLink for the request
+                Person->>+Company_Wallet: copy/paste deep-link presentation into the company wallet or scan the QRCode
+            end
+            Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
+            Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own business configuration)
+            Company_Wallet->>Bank_Portal: present the attestations
+            Bank_Portal<<->>Bank_Wallet: verification of attestations rulebooks                    
+            Bank_Portal<<->>SR Person : issue token 
+       option other 
+            Note right of Bank_Portal: no access to the portal  
+    end
+```
 
 ### 3.2. IBAN Issuing
 
