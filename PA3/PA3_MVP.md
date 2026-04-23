@@ -1,7 +1,16 @@
 # PA3 MVP Workflow
-MVP Restrictions
-- 
+
+MVP Restrictions:
+
+- One-person GmbH: the account initiator is the sole legal representative, who is also the UBO and contact person for the bank relationship.
+- No additional signatory rights are required.
+- The company is not a branch.
+- The process is executed in a single step, including immediate IBAN issuance/attestation.
+- Mutual authentication is default true (no TLOL or device binding checks applied).
+- The company is authorized to request issuance of, receive, and present the credential.
+
 ## Pre-requisites
+This are the Pre-requisites for the company and bank in order to run the MVP.
 
 ```mermaid
 sequenceDiagram
