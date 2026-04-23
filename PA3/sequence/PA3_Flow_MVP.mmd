@@ -2,11 +2,11 @@ sequenceDiagram
     actor Initiator
     participant EUDIWallet_Initiator
     actor UBOs
-    participant EUDIWallet_UBOs
+    participant EUDIWallet
     actor LegalRepr
-    participant EUDIWallet_Repr
+    participant EUDIWallet
     participant Company_Wallet
-    participant TransparencyRegister
+    participant Trans.Register
     participant Bank_Portal
     participant Bank_Wallet
     participant Bank_InternalSystem
@@ -86,10 +86,10 @@ sequenceDiagram
     Bank_Portal<<->>Bank_Wallet: generate request for UBOList (TR)
     critical
     option Option1. From Transaprency Register
-        Bank_Portal->>+TransparencyRegister: request presentations
-        TransparencyRegister<<->>TransparencyRegister: mutual authentification ( x509 certificate or eubwoid rulebook)
-        TransparencyRegister<<->>TransparencyRegister: check the authorization of requester to present requested attestations (own business configuration or visual check)
-        TransparencyRegister->>Bank_Portal: present the attestations
+        Bank_Portal->>+Trans.Register: request presentations
+        Trans.Register<<->>Trans.Register: mutual authentification ( x509 certificate or eubwoid rulebook)
+        Trans.Register<<->>Trans.Register: check the authorization of requester to present requested attestations (own business configuration or visual check)
+        Trans.Register->>Bank_Portal: present the attestations
     option Option2. From Company Wallet - Automatically
         Note over Initiator: part of MVP+
     end
@@ -102,24 +102,24 @@ sequenceDiagram
         critical
         option Option1. UBO online (PID)
             UBOs->>Bank_Portal: open the link
-            Bank_Portal<<->>EUDIWallet_UBOs: generate request for PID and embed into QRCode
-            UBOs->>EUDIWallet_UBOs: scans QR Code with personal wallet to authenticate for Verification process
-            EUDIWallet_UBOs->>+EUDIWallet_UBOs : mutual authentification ( auth. certificate )
-            Initiator->>+EUDIWallet_UBOs : check the authorization to present requested attestations (visual check)
-            EUDIWallet_UBOs->>Bank_Wallet: present the attestations
+            Bank_Portal<<->>EUDIWallet: generate request for PID and embed into QRCode
+            UBOs->>EUDIWallet: scans QR Code with personal wallet to authenticate for Verification process
+            EUDIWallet->>+EUDIWallet : mutual authentification ( auth. certificate )
+            Initiator->>+EUDIWallet : check the authorization to present requested attestations (visual check)
+            EUDIWallet->>Bank_Wallet: present the attestations
             Bank_Portal<<->>Bank_Wallet: verification of attestations (PID rulebook)
             Bank_Portal<<->>Bank_Portal: cross_check attestation data against UBO submitted data (or part of request: Temporal Validity)
         option Option2. UBO online (PASS)
             UBOs->>Bank_Portal: open the link
-            Bank_Portal<<->>EUDIWallet_UBOs: generate request for ICAO and embed into QRCode
-            UBOs->>EUDIWallet_UBOs: scans QR Code with personal wallet to authenticate for Verification process
-            EUDIWallet_UBOs->>+EUDIWallet_UBOs : mutual authentification ( auth. certificate )
-            Initiator->>+EUDIWallet_UBOs : check the authorization to present requested attestations (visual check)
-            EUDIWallet_UBOs->>Bank_Wallet: present the attestations
+            Bank_Portal<<->>EUDIWallet: generate request for ICAO and embed into QRCode
+            UBOs->>EUDIWallet: scans QR Code with personal wallet to authenticate for Verification process
+            EUDIWallet->>+EUDIWallet : mutual authentification ( auth. certificate )
+            Initiator->>+EUDIWallet : check the authorization to present requested attestations (visual check)
+            EUDIWallet->>Bank_Wallet: present the attestations
             Bank_Portal<<->>Bank_Wallet: verification of attestations (rulebook)
             Bank_Portal<<->>Bank_Portal: cross_check attestation data against UBO submitted data
         option Option3. UBO offline or other identifications
-            Note over EUDIWallet_UBOs : part of MVP+ (UBO Offline: POA + evidence/VideoIdent)
+            Note over EUDIWallet : part of MVP+ (UBO Offline: POA + evidence/VideoIdent)
         end
     end
     Bank_Portal<<->>Bank_Portal: cross check over all attestations
@@ -130,15 +130,15 @@ sequenceDiagram
     Bank_Portal->>+Bank_InternalSystem: Create the contract
     Bank_Portal->>+Bank_Portal: presents document to be signed and QR Code to authenticate for Signature
     loop the count of person specified in the EUCC
-        LegalRepr ->>+EUDIWallet_Repr: scans QR Code with personal wallet to authenticate for Signature
-        EUDIWallet_Repr->>+EUDIWallet_Repr:  mutual authentification ( over auth. certificate)
-        Initiator->>+EUDIWallet_Repr : check the authorization to present requested attestations (visual check)
-        EUDIWallet_Repr->Bank_Portal : send the pid information
+        LegalRepr ->>+EUDIWallet: scans QR Code with personal wallet to authenticate for Signature
+        EUDIWallet->>+EUDIWallet:  mutual authentification ( over auth. certificate)
+        Initiator->>+EUDIWallet : check the authorization to present requested attestations (visual check)
+        EUDIWallet->Bank_Portal : send the pid information
         Bank_Portal<<->>Bank_Wallet: verification of PID  (rulebook)
         Bank_Portal<<->>Bank_Portal: Cross check against the EUCC
-        LegalRepr ->>+EUDIWallet_Repr: Register for QES Certificate
-        LegalRepr ->>+EUDIWallet_Repr: activates Signature with personal wallet
-        LegalRepr ->>+EUDIWallet_Repr: sign the contract
+        LegalRepr ->>+EUDIWallet: Register for QES Certificate
+        LegalRepr ->>+EUDIWallet: activates Signature with personal wallet
+        LegalRepr ->>+EUDIWallet: sign the contract
     end
     Bank_Wallet->>+Bank_Wallet: verifies collected attestations
     Bank_Wallet->>+Bank_Wallet: verifies QES
