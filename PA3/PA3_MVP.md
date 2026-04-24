@@ -8,6 +8,7 @@ MVP Restrictions:
 - The company is authorized to present attestations and receive attestations (no configuration support)
 - The company is not a branch.
 - Mutual authentication is set to default true (no TLOL or device-binding checks are applied).
+- The MVP process (Scenario 1-3) is executed sequentially by one person 
 
 ## Bank perspective
 - The company is not classified as high risk (no sanctions screening is required).
@@ -15,7 +16,7 @@ MVP Restrictions:
 Info: If other banks participate in the MVP, this can be extended to include the POR attestation.
 - UBO calculation is an internal process and is not part of the MVP or MVP+.
 - Discrepancy reporting to the transparency register is a separate process and is not part of the MVP or MVP+.
-- The process is executed in a single step, including immediate IBAN-OV issuance/attestation as EAA  (means no additional onboarding is required)
+- The process ending with the triggering and issuance of the IBAN-OV issuance/attestation as EAA (means no additional onboarding is required)
 
 ## Pre-requisites
 This are the pre-requisites for the company and bank in order to run the MVP.
@@ -228,6 +229,7 @@ This will be handled in the MVP+
 ```mermaid
 sequenceDiagram
     actor Initiator
+    participant Company_Wallet
     Initiator ->>+Bank_Portal : Selects "IBAN-OV Attestation" service
 
     Bank_Portal ->>+Bank_InternalSystem: Retrieves authoritative IBAN-OV data
@@ -235,8 +237,10 @@ sequenceDiagram
     Bank_Portal ->>+Company_Wallet : Delivers signed IBAN-OV EAA
     Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
     Company_Wallet<<->>Company_Wallet: check the authorization of requester to issue the attestations (own bussiness configuration)
+    Company_Wallet<<->>Company_Wallet: verification of attestations (IBAN-OV rulebook issuance)
     Company_Wallet->>+Bank_Portal: confirm the acceptance
-
     Bank_Portal->>+Company_Wallet: issue the attestation
+    Company_Wallet<<->>Company_Wallet: store the attestation
+    
     Bank_Portal ->>+Bank_Portal : Displays success notification (IBAN issued)
 ```
