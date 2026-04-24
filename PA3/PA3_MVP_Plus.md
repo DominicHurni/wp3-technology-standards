@@ -1,15 +1,27 @@
 # PA3 MVP+ Workflow
 
-MVP Restrictions:
+MVP+ coverage
 
-- no restriction in regard to initiator, legal repr and ubo list  
-- no restriction in regard to signatory rights
-- no restriction in regard to IBAN request (wih delay)
-- Mutual authentication is default true (no TLOL or device binding checks applied).
-- The company is authorized to present the credential and receive attestation
-- The company is a branch
-- The company is risk-related company (sanction list check is required)
+## Scenario 1
+- Initiator - not registered in any registry (no EUCC)
+- min 2 Legal Representatives one  Legal Representative registered in EUCC and one Legal Representative with POA only 
+- min 2 UBOs: UBO 1 registered in transparency register and EUCC  and UBO 2 not registered in transparency register (“fictive UBO”)
+- UBO identification & verification (online,offline and videoident) 
+- UBO 1: offline onboarding (no EUDI wallet, POA + supporting evidence)
+- UBO 2: offline onboarding (no EUDI wallet, VideoIdent)
+- Support for cross-border onboarding with registration in the national register
+- The company operates as a branch in another country
 
+## Scenario 2
+- Default signing method: QES Minimum of 2 signatories required : one  Legal Representative and one person with POA
+Open point:
+- Assessment required whether QSeal alone is sufficient for contract signing
+
+## Scenario 3
+Open point:
+- Definition and detailed design of the onboarding process for authorized persons
+- Scope, verification method, and required roles to be clarified
+  
 ## Pre-requisites
 This are the Pre-requisites for the company and bank in order to run the MVP.
 
@@ -17,28 +29,19 @@ This are the Pre-requisites for the company and bank in order to run the MVP.
 sequenceDiagram
     participant Auth.Source
     participant TransparencyRegister
-    participant TAX.Administration 
+    participant TAX_Administration 
     participant Company
     participant Bank 
     Auth.Source ->> Company : issue EBWOID  
     Auth.Source ->> Company : issue EUCC
-    critical
-        option PubEAA 
-            TAX.Administration ->> Company : issue TAX,VAT
-        option EAA
-             Company ->> Company: issue TAX,VAT
-    end 
-    critical
-        option Initator POA required  
-            Company ->> Company: issue PoA for Initiator
-        option SR POA required
-            Company ->> Company: issue PoA for SignatoryRights Persons
-    end                
-    Company ->> Company: issue CompanyInfo, ContactPerson
-    Company ->> Company: issue OwnerList, CntrolList, UBOList
-    Company ->> Company: issue SignatoryRights 
+    alt PubEAA Issuer available
+        TAX_Administration ->> Company : issue TAX
+    else EAA attestation issuing
+        Company ->> Company: issue TAX
+    end
+    Company ->> Company: issue VAT, CompanyInfo, ContactPerson, SignatoryRights
+    Company ->> Company: issue OwnerList, CntrolList, UBO
     Company ->> TransparencyRegister: submit the UBO 
-    TransparencyRegister ->> Company : issue UBOList(TR)
     Auth.Source ->> Bank : issue EBWOID
     Auth.Source ->> Company : issue TFS 
 ```
