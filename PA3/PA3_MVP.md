@@ -15,7 +15,7 @@ MVP Restrictions:
 Info: If other banks participate in the MVP, this can be extended to include the POR attestation.
 - UBO calculation is an internal process and is not part of the MVP or MVP+.
 - Discrepancy reporting to the transparency register is a separate process and is not part of the MVP or MVP+.
-- The process is executed in a single step, including immediate IBAN issuance/attestation (means no additional onboarding is required)
+- The process is executed in a single step, including immediate IBAN-OV issuance/attestation as EAA  (means no additional onboarding is required)
 
 ## Pre-requisites
 This are the pre-requisites for the company and bank in order to run the MVP.
@@ -49,18 +49,14 @@ sequenceDiagram
     actor Initiator
     activate Initiator
     Person->>+Bank_Portal: Select "open business account" Service
-    alt Option1.Wallet_Support_EndPoint (ex. EUBW DirectoryList)
-        Bank_Portal->>+Bank_Portal : Provide the list of available legal entities
-        Initiator->>+Bank_Portal: select the legal entity from the list & the respective wallet address
-        Bank_Portal->>+Bank_Portal: resolve the endpoint of selected legal entity
-    else Option2.Wallet_Support_EndPoint (ex. Resolvable eAddress or endpoint URI)
+    alt Wallet_Support_EndPoint (ex. Resolvable eAddress or public endpoint URI)
         Bank_Portal->>+Bank_Portal : Provide an input field
         Initiator->>+Bank_Portal: fill the address or end-point of the business wallet
         Bank_Portal->>+Bank_Portal: resolve eAddress
-    else Option3.Support directly into EUBW
+    else Support directly into EUBW  
         Note over Company_Wallet: the company wallet already integrate the business process of specific banks
         Initiator->>+Company_Wallet: Select bank in the EUBW (configured in wallet)
-    else Option4. Other: manual process (EUBW or EUDI Wallet)
+    else Other: manual process (EUBW or EUDI Wallet)
         Note over Company_Wallet: manuall proces by the Initiator
     end
     Person->>+Bank_Portal: trigger process
@@ -69,16 +65,16 @@ sequenceDiagram
 ### 1.2. Initiator Identification 
 ```mermaid
 sequenceDiagram
-    actor Person
+    actor Initiator
     participant EUDIWallet
-    alt Option1.PID
+    alt PID - Identification
         Bank_Portal<<->>Bank_Wallet: generate request to identity Initiator (PID) and embed into QRCode
         Initiator->>+EUDIWallet : scans QR Code with personal wallet
         EUDIWallet->>+EUDIWallet : mutual authentification ( auth. certificate )
         Initiator->>+EUDIWallet : check the authorization for presentation (visual check)
         EUDIWallet->Bank_Portal : send the pid information
         Bank_Portal<<->>Bank_Wallet: verification of PID  (rulebook)
-    else Option2.Other identification
+    else Other identification means
         Note over EUDIWallet: identification of the person with other identfication means (ex. eID)
     end
 ```
@@ -87,14 +83,14 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    actor Person
+    actor Initiator
     Bank_Portal<<->>Bank_Wallet: generate proof-request
     Bank_Portal<<->>Bank_Wallet: for EBWOID, EUCC,TAX, VAT,CompanyInfo, ContactPerson
     alt Automatically (EUBW support end-points)
-        Bank_Portal->>+Company_Wallet: request presentations
+        Bank_Portal->>+Company_Wallet: request presentations 
     else Manually ( EUBW or EUDI Wallet)
-        Bank_Portal->>Bank_Portal: embed request into QRCode and provide a DeepLink for the request
-        Person->>+Company_Wallet: copy/paste deep-link presentation into the company wallet or scan the QRCode
+        Bank_Portal->>Bank_Portal: embed request into QRCode and provide an openid4vp-URI for the request
+        Initiator->>+Company_Wallet: copy/paste openid4vp-URI into the company wallet or scan the QRCode
     end
     Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
     Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own business configuration)
@@ -119,25 +115,24 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    actor Person
+    actor Initiator
     Bank_Portal<<->>Bank_Wallet: generate proof-request
     Bank_Portal<<->>Bank_Wallet: OwnershipList,Controllist,UBOList,SignatoryRights
-    critical 
-    option Company is not a branch
+    alt Company is not a branch
         Bank_Portal<<->>Bank_Wallet: generate proof-request
         Bank_Portal<<->>Bank_Wallet: OwnershipList,Controllist,UBOList,SignatoryRights
         alt Automatically (EUBW support end-points)
             Bank_Portal->>+Company_Wallet: request presentations
         else Manually ( EUBW or EUDI Wallet)
-            Bank_Portal->>Bank_Portal: embed request into QRCode and provide a DeepLink for the request
-            Person->>+Company_Wallet: copy/paste deep-link presentation into the company wallet or scan the QRCode
+            Bank_Portal->>Bank_Portal: embed request into QRCode and provide an openid4vp-URI link for the request
+            Initiator->>+Company_Wallet: copy/paste openid4vp-URI link into the company wallet or scan the QRCode
         end                 
         Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
         Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
         Company_Wallet->>Bank_Portal: present the attestations
         Bank_Portal<<->>Bank_Wallet: verification of attestations (rulebook)
-    option Company is a branch
-        Note over Person,Bank_Wallet: This case will be handled in the MVP+
+    else Company is a branch
+        Note over Initiator,Bank_Wallet: This case will be handled in the MVP+
     end
 
     Note right of Bank_Portal: UBO Calculation is not part of the MVP. This is an internal process
@@ -148,7 +143,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    alt Option1.From Transparency Register
+    alt From Transparency Register
         Bank_Portal<<->>Bank_Wallet: generate request for UBOList (TR)
         Bank_Portal->>+Trans.Register: request presentations
         Trans.Register<<->>Trans.Register: mutual authentification ( x509 certificate or eubwoid rulebook)
@@ -156,7 +151,7 @@ sequenceDiagram
         Trans.Register->>Bank_Portal: present the attestations
         Bank_Portal<<->>Bank_Wallet: verification of attestations (rulebook)
         Bank_Portal->>Bank_Portal: cross-check the identification data of the UBOs from both UBO Lists
-    else Option2. From Company Wallet - Automatically
+    else From Company Wallet - Automatically
         Note over Company Wallet: This case will be handled in the MVP+
     end
     Note right of Bank_Portal: Reporting is not part of the MVP. This is an internal process
@@ -176,7 +171,7 @@ sequenceDiagram
         Initiator->>+EUDIWallet : check the authorization to present requested attestations (visual check)
         EUDIWallet->>Bank_Wallet: present the attestations
         Bank_Portal<<->>Bank_Wallet: verification of attestations (PID rulebook)
-        Bank_Portal<<->>Bank_Portal: cross_check attestation data against UBO submitted data (or part of request: Temporal Validity)
+        Bank_Portal<<->>Bank_Portal: cross_check attestation data against UBO submitted data (or part of request: Temporal Validity- UBO Rulebook) 
     else other cases online (Pass),offline or videoident  
         Note right of Bank_Portal: This cases will be handled in the MVP+.
     end
