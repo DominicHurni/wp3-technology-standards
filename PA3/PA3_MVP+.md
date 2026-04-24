@@ -333,11 +333,12 @@ sequenceDiagram
             Bank_Portal<<->>SR Person : issue token 
         option person not onboarded and in SR 
             Bank_Portal<<->>Bank_Wallet: generate proof-request EU POA  
-            option Automatically (EUBW support end-points)
-                Bank_Portal->>+Company_Wallet: request presentation POA 
-            option Manually ( EUBW or EUDI Wallet)
-                Bank_Portal->>Bank_Portal: embed request into QRCode and provide a DeepLink for the request
-                Person->>+Company_Wallet: copy/paste deep-link presentation into the company wallet or scan the QRCode
+            critical 
+                option Automatically (EUBW support end-points)
+                    Bank_Portal->>+Company_Wallet: request presentation POA 
+                option Manually ( EUBW or EUDI Wallet)
+                    Bank_Portal->>Bank_Portal: embed request into QRCode and provide a DeepLink for the request
+                    Person->>+Company_Wallet: copy/paste deep-link presentation into the company wallet or scan the QRCode
             end
             Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
             Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own business configuration)
