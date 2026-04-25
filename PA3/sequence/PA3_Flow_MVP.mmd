@@ -4,9 +4,11 @@ sequenceDiagram
     Note left of EUDIWallet : this is the Initiator,Legal Representative, UBO and ContactPerson of the company
     participant Company_Wallet
     participant Trans.Register
-    participant Bank_Portal
-    participant Bank_Wallet
-    participant Bank_InternalSystem
+    box Bank
+        participant Bank_Portal
+        participant Bank_Wallet
+        participant Bank_InternalSystem
+    end
 
     activate Initiator
     Note over Initiator,Bank_Wallet: 1.1. Legal Entity Selection
