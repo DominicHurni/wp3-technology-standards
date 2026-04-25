@@ -40,7 +40,7 @@ sequenceDiagram
     Company ->> Company: issue VAT, CompanyInfo, ContactPerson
     SocialSecurityIssuer->> Company: issue SocialSecurityAttestation 
         
-    Note over Auth.Source ,Company_Wallet: required for MVP+   
+    Note over Auth.Source ,RelyingParty: required for MVP+   
     Company ->> Company: issue OwnershipList,ControlList
     Company ->> Company: issue TFS 
 ```

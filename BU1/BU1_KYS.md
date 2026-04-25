@@ -48,8 +48,8 @@ sequenceDiagram
     participant GS1
     GS1 ->> Company: issue GS1 
     Company ->> Company: issue DUNS, SiteAttestation
-    
-    Note over Auth.Source ,Company_Wallet: required for MVP+   
+
+    Note over Auth.Source ,RelyingParty: required for MVP+   
     Company ->> Company: issue OwnershipList,ControlList, UBO
     Company ->> Company: issue ESG, TFS  
 ```
