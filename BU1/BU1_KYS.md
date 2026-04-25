@@ -195,9 +195,10 @@ sequenceDiagram
 ### 1.8. Cross-Check  
 ```mermaid
 sequenceDiagram
+    actor ContactPerson
     RP_Portal<<->>RP_Portal: cross check over all attestations (to be defined exactly what will be checked)
     RP_Portal->>+Bank_InternalSystem: transfer data to internal system
 
-    RP_Portal<<->>RP_Portal: Send notification to the contact person that onboarding was successful.
+    RP_Portal->>ContactPerson: Send notification to the contact person that onboarding was successful.
     RP_Portal<<->>RP_Portal: Display success notification for initiator
 ```
