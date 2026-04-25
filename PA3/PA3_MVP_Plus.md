@@ -192,6 +192,7 @@ sequenceDiagram
 ### 1.7. UBOs Verification
 ```mermaid
 sequenceDiagram
+    participant UBOs@{ "type" : "collections" }
     UBOs->>Bank_Portal: open the link
     critical
         option UBO online (PID or PASS
