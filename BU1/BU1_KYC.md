@@ -38,9 +38,9 @@ sequenceDiagram
     end
     
     Company ->> Company: issue VAT, CompanyInfo, ContactPerson
-    SocialSecurityIssuer->> Company: issue SocialSecurity attestation 
+    SocialSecurityIssuer->> Company: issue SocialSecurityAttestation 
         
-    Note over Source, Company_Wallet: part of the MVP++
+    Note over Auth.Source ,Company_Wallet: required for MVP+   
     Company ->> Company: issue OwnershipList,ControlList
     Company ->> Company: issue TFS 
 ```
@@ -52,7 +52,8 @@ sequenceDiagram
 sequenceDiagram
     actor Initiator
     activate Initiator
-    Person->>+RP_Portal: Select "start customer onboarding" Service
+    Initiator->>+RP_Portal: Select "start customer onboarding" Service
+    Initiator->>+RP_Portal: Fill the required contact information 
     alt Wallet_Support_EndPoint (ex. EUBW DirectoryList)
         Bank_Portal->>+Bank_Portal : Provide the list of available legal entities
         Initiator->>+Bank_Portal: select the legal entity from the list & the respective wallet address
@@ -96,7 +97,7 @@ sequenceDiagram
     actor Initiator
     RP_Portal<<->>Bank_Wallet: generate proof-request
     RP_Portal<<->>Bank_Wallet: for CompanyInfo, ContactPerson
-    RP_Portal<<->>Bank_Wallet: in case the social security number is required : SocialSecurity  
+    RP_Portal<<->>Bank_Wallet: in case of public procurement : SocialSecurityAttestation  
     alt Automatically (EUBW support end-points)
         RP_Portal->>+Company_Wallet: request presentations
     else Manually ( EUBW or EUDI Wallet)
@@ -151,6 +152,7 @@ sequenceDiagram
 sequenceDiagram
     RP_Portal<<->>RP_Portal: cross check over all attestations (to be defined exactly what will be checked)
     RP_Portal->>+Bank_InternalSystem: transfer data to internal system
-
-    RP_Portal<<->>RP_Portal: Display success notification 
+    
+    RP_Portal<<->>RP_Portal: Send notification to the contact person that onboarding was successful.
+    RP_Portal<<->>RP_Portal: Display success notification for initiator
 ```

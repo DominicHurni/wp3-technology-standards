@@ -188,7 +188,8 @@ sequenceDiagram
     Bank_Portal<<->>Bank_Portal: cross check over all attestations 
     Bank_Portal->>+Bank_InternalSystem: transfer data to internal system
 
-    Bank_Portal<<->>Bank_Portal: Display success notification 
+    Bank_Portal<<->>RP_Portal: Send notification to the contact person that onboarding was successful.
+    Bank_Portal<<->>RP_Portal: Display success notification for initiator
 ```
 
 ### 2. Scenario 2
@@ -245,3 +246,4 @@ sequenceDiagram
     
     Bank_Portal ->>+Bank_Portal : Displays success notification (IBAN issued)
 ```
+

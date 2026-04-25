@@ -40,18 +40,18 @@ sequenceDiagram
     end
     
     Company ->> Company: issue VAT, CompanyInfo,  ContactPerson
-    Company ->> Company: issue PaymentTerms, SiteAttesttion 
+    Company ->> Company: issue PaymentTerms  
     Bank ->> Company: issue IBAN 
-    
+   
     participant LEI      
     LEI ->> Company: issue LEI 
     participant GS1
     GS1 ->> Company: issue GS1 
+    Company ->> Company: issue DUNS, SiteAttestation
     
-    Note over Source, Company_Wallet: part of the MVP++
+    Note over Auth.Source ,Company_Wallet: required for MVP+   
     Company ->> Company: issue OwnershipList,ControlList, UBO
-    Company ->> Company: issue DUNS, ESG 
-    Company ->> Company: issue TFS       
+    Company ->> Company: issue ESG, TFS  
 ```
 
 ### 1. Scenario KYC 
@@ -61,7 +61,8 @@ sequenceDiagram
 sequenceDiagram
     actor Initiator
     activate Initiator
-    Person->>+RP_Portal: Select "start supplier onboarding" Service
+    Initiator->>+RP_Portal: Select "start supplier onboarding" Service
+    Initiator->>+RP_Portal: Fill the required contact information
     alt Wallet_Support_EndPoint (ex. EUBW DirectoryList)
         Bank_Portal->>+Bank_Portal : Provide the list of available legal entities
         Initiator->>+Bank_Portal: select the legal entity from the list & the respective wallet address
@@ -141,7 +142,7 @@ sequenceDiagram
     actor Initiator
     RP_Portal<<->>Bank_Wallet: generate proof-request
     RP_Portal<<->>Bank_Wallet: for DUNS, GS1, LEI 
-    RP_Portal<<->>Bank_Wallet: in case that the company has site informaiton : Site 
+    RP_Portal<<->>Bank_Wallet: in case that the company has site informaiton : SiteAttestation 
     alt Automatically (EUBW support end-points)
         RP_Portal->>+Company_Wallet: request presentations
     else Manually ( EUBW or EUDI Wallet)
@@ -197,5 +198,6 @@ sequenceDiagram
     RP_Portal<<->>RP_Portal: cross check over all attestations (to be defined exactly what will be checked)
     RP_Portal->>+Bank_InternalSystem: transfer data to internal system
 
-    RP_Portal<<->>RP_Portal: Display success notification 
+    RP_Portal<<->>RP_Portal: Send notification to the contact person that onboarding was successful.
+    RP_Portal<<->>RP_Portal: Display success notification for initiator
 ```
