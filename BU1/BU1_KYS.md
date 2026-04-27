@@ -27,8 +27,7 @@ sequenceDiagram
     participant Customer 
     participant Bank
     
-    Auth.Source ->> Supplier : issue EBWOID  
-    Auth.Source ->> Supplier : issue EUCC
+    Auth.Source ->> Supplier : issue EBWOID, EUCC 
     Auth.Source ->> Customer : issue EBWOID
     
     alt PubEAA Issuer available
@@ -36,17 +35,18 @@ sequenceDiagram
     else EAA attestation issuing
         Supplier ->> Supplier: issue TAX
     end
-    
     Supplier ->> Supplier: issue VAT, CompanyInfo,  ContactPerson
-    Supplier ->> Supplier: issue PaymentTerms  
-    Bank ->> Supplier: issue IBAN 
-    Supplier ->> Supplier: issue OwnershipList,ControlList
     
-    Supplier ->> Supplier: issue DUNS, SiteAttestation
+    Supplier ->> Supplier: issue OwnershipList,ControlList    
+    
     participant LEI      
     LEI ->> Supplier: issue LEI 
     participant GS1
     GS1 ->> Supplier: issue GS1 
+    Supplier ->> Supplier: issue DUNS, SiteAttestation
+
+    Supplier ->> Supplier: issue PaymentTerms  
+    Bank ->> Supplier: issue IBAN 
     
 ```
 

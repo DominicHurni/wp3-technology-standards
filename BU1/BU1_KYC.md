@@ -25,18 +25,17 @@ sequenceDiagram
     participant Buyer
     participant Seller
 
-    Auth.Source ->> Buyer : issue EBWOID  
-    Auth.Source ->> Buyer : issue EUCC
+    Auth.Source ->> Buyer : issue EBWOID,EUCC
     Auth.Source ->> Seller : issue EBWOID
     
     alt EAA Issuer available
         TAX_Administration ->> Buyer : issue TAX
     else EAA attestation issuing
-        Seller ->> Buyer: issue TAX
+        Buyer ->> Buyer: issue TAX
     end
-    
-    Seller ->> Buyer: issue VAT, CompanyInfo, ContactPerson
-    Seller ->> Buyer: issue OwnershipList,ControlList
+  
+    Buyer ->> Buyer: issue VAT, CompanyInfo, ContactPerson
+    Buyer ->> Buyer: issue OwnershipList,ControlList
 ```
 
 2) This are the additionally pre-requisites for the company in order to run the MVP+
