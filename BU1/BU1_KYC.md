@@ -3,7 +3,7 @@
 MVP Restrictions:
 ## Company Perspective
 - Any person can trigger the process of customer onboarding
-- The company is authorized to present attestations and receive attestations (no configuration support)
+- The company is authorized to issue, hold, present and receive attestations (no configuration support)
 - Mutual authentication is set to default true (no TLOL or device-binding checks are applied).
 - The MVP process is executed sequentially in one step.
 
@@ -30,7 +30,9 @@ sequenceDiagram
     Auth.Source ->> Company : issue EBWOID  
     Auth.Source ->> Company : issue EUCC
     Auth.Source ->> RelyingParty : issue EBWOID
-    
+    Auth.Source ->> RelyingParty : issue EUCC
+
+
     alt PubEAA Issuer available
         TAX_Administration ->> Company : issue TAX
     else EAA attestation issuing
@@ -44,6 +46,7 @@ sequenceDiagram
     Company ->> Company: issue OwnershipList,ControlList
     Company ->> Company: issue TFS 
 ```
+Notice: Nowdays ecosystem lacks of issuing entities. Self attested attestations bridge this impediment. E.g. tax authority is not capable to issue attestation yet. Company uses self issued tax verifiable credential.   
 
 ### 1. Scenario KYC 
 
@@ -63,7 +66,7 @@ sequenceDiagram
         Initiator->>+RP_Portal: fill the address or end-point of the business wallet
         RP_Portal->>+RP_Portal: resolve eAddress
     else Support directly into EUBW  
-        Note over Company_Wallet: the company wallet already integrate the business process of specific banks
+        Note over Company_Wallet: Precondition -the company wallet already integrate the business process of specific banks
         Initiator->>+Company_Wallet: Select bank in the EUBW (configured in wallet)
     else Other: manual process (EUBW or EUDI Wallet)
         Note over Company_Wallet: manuall proces by the Initiator
