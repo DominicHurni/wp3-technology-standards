@@ -47,7 +47,7 @@ sequenceDiagram
     end 
     
     alt Supplier has a Site 
-        Supplier ->> SiteAttestation
+        Supplier ->> Supplier : issue SiteAttestation
     end
     
     Supplier ->> Supplier: issue PaymentTerms  
