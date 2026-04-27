@@ -1,57 +1,55 @@
 # BU1 KYS MVP Workflow
 
 MVP Restrictions:
-## Company Perspective
+## Supplier/Holder Perspective
 - Any person can trigger the process of supplier onboarding
-- The company is authorized to present attestations and receive attestations (no configuration support)
-- Mutual authentication is set to default true (no TLOL or device-binding checks are applied).
-- The MVP process is executed sequentially in one step. 
+- The Mutual authentication is set to default true (no TLOL or device-binding checks are applied).
+- The supplier wallet  is authorized to present attestations and receive attestations (no configuration support)
 
-## RelyingParty perspective
-- The company who wants to be supplier will be classified as low/medium risk supplier. It will be no high-risk supplier  (therefore, e.g.: no sanction screening is required)
+## Customer/RelyingParty Perspective 
+- The supplier will be classified as low/medium risk supplier. It will be no high-risk supplier  (therefore, e.g.: no sanction screening is required)
 
 MVP+ Extension:
-## RelyingParty perspective
-- Additionally support for the KYS due diligence
-- Additionally support for the sanction list validation 
-- Additionally support for the ESG Cetificates 
+## Supplier perspective
+- Additionally support for the KYS sanction validation 
+- Additionally support for the ESG Certificates 
 
 ## Pre-requisites
-This are the pre-requisites for the company in order to run the MVP.
-
+This are the pre-requisites for the company in order to run the MVP and MVP+
 
 ```mermaid
 sequenceDiagram
     participant Auth.Source 
     note right of Auth.Source : Bundesanzeiger, KVK, ...
     participant TAX_Administration 
-    participant Company
+    participant Supplier
     participant RelyingParty
     participant Bank
     
-    Auth.Source ->> Company : issue EBWOID  
-    Auth.Source ->> Company : issue EUCC
-    Auth.Source ->> RelyingParty : issue EBWOID
+    Auth.Source ->> Supplier : issue EBWOID  
+    Auth.Source ->> Supplier : issue EUCC
+    Auth.Source ->> Customer : issue EBWOID
     
     alt PubEAA Issuer available
-        TAX_Administration ->> Company : issue TAX
+        TAX_Administration ->> Supplier : issue TAX
     else EAA attestation issuing
-        Company ->> Company: issue TAX
+        Supplier ->> Supplier: issue TAX
     end
     
-    Company ->> Company: issue VAT, CompanyInfo,  ContactPerson
-    Company ->> Company: issue PaymentTerms  
-    Bank ->> Company: issue IBAN 
-   
+    Supplier ->> Supplier: issue VAT, CompanyInfo,  ContactPerson
+    Supplier ->> Supplier: issue PaymentTerms  
+    Supplier ->> Supplier: issue DUNS, SiteAttestation
+    Bank ->> Supplier: issue IBAN 
+       
     participant LEI      
-    LEI ->> Company: issue LEI 
+    LEI ->> Supplier: issue LEI 
     participant GS1
-    GS1 ->> Company: issue GS1 
-    Company ->> Company: issue DUNS, SiteAttestation
-
+    GS1 ->> Supplier: issue GS1 
+    Supplier ->> Supplier: issue OwnershipList,ControlList
+    
     Note over Auth.Source ,RelyingParty: required for MVP+   
-    Company ->> Company: issue OwnershipList,ControlList, UBO
-    Company ->> Company: issue ESG, TFS  
+    Auth.Source ->> Supplier: issue TFS
+    Supplier ->> Supplier: issue ESG (as EAA, QEAA - in clarification)    
 ```
 
 ### 1. Scenario KYC 
@@ -62,20 +60,17 @@ sequenceDiagram
     actor Initiator
     activate Initiator
     Initiator->>+RP_Portal: Select "start supplier onboarding" Service
-    Initiator->>+RP_Portal: Fill the required contact information
-    alt Wallet_Support_EndPoint (ex. EUBW DirectoryList)
-        RP_Portal->>+RP_Portal : Provide the list of available legal entities
-        Initiator->>+RP_Portal: select the legal entity from the list & the respective wallet address
-        RP_Portal->>+RP_Portal: resolve the endpoint of selected legal entity
-    else Wallet_Support_EndPoint (ex. Resolvable eAddress or public endpoint URI)
+    Initiator->>+RP_Portal: Optional - fill the required initiator information
+ 
+    alt Wallet_Support_EndPoint (ex. Resolvable eAddress or public endpoint URI)
         RP_Portal->>+RP_Portal : Provide an input field
         Initiator->>+RP_Portal: fill the address or end-point of the business wallet
         RP_Portal->>+RP_Portal: resolve eAddress
     else Support directly into EUBW  
-        Note over Company_Wallet: the company wallet already integrate the business process of specific relying party
-        Initiator->>+Company_Wallet: Select relying party in the EUBW (configured in wallet)
+        Note over Supplier_Wallet: the company wallet already integrate the business process of specific relying party
+        Initiator->>+Supplier_Wallet: Select relying party in the EUBW (configured in wallet)
     else Other: manual process (EUBW or EUDI Wallet)
-        Note over Company_Wallet: manuall proces by the Initiator
+        Note over Supplier_Wallet: manuall proces by the Initiator
     end
     Person->>+RP_Portal: trigger process
 ```
@@ -89,14 +84,14 @@ sequenceDiagram
     RP_Portal<<->>RP_Wallet: generate proof-request
     RP_Portal<<->>RP_Wallet: for EBWOID, EUCC,TAX, VAT
     alt Automatically (EUBW support end-points)
-        RP_Portal->>+Company_Wallet: request presentations 
+        RP_Portal->>+Supplier_Wallet: request presentations 
     else Manually ( EUBW or EUDI Wallet)
         RP_Portal->>RP_Portal: embed request into QRCode and provide an openid4vp-URI for the request
-        Initiator->>+Company_Wallet: copy/paste openid4vp-URI into the company wallet or scan the QRCode
+        Initiator->>+Supplier_Wallet: copy/paste openid4vp-URI into the company wallet or scan the QRCode
     end
-    Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
-    Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own business configuration)
-    Company_Wallet->>RP_Portal: present the attestations
+    Supplier_Wallet<<->>Supplier_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
+    Supplier_Wallet<<->>Supplier_Wallet: check the authorization of requester to present requested attestations (own business configuration)
+    Supplier_Wallet->>RP_Portal: present the attestations
     RP_Portal<<->>RP_Wallet: verification of attestations rulebooks
 ```
 
@@ -105,90 +100,89 @@ sequenceDiagram
 sequenceDiagram
     actor Initiator
     RP_Portal<<->>RP_Wallet: generate proof-request
-    RP_Portal<<->>RP_Wallet: for CompanyInfo, ContactPerson, PaymentTerms
+    RP_Portal<<->>RP_Wallet: for CompanyInfo, ContactPerson, PaymentTerms, (SiteAttestation)
     alt Automatically (EUBW support end-points)
-        RP_Portal->>+Company_Wallet: request presentations
+        RP_Portal->>+Supplier_Wallet: request presentations
     else Manually ( EUBW or EUDI Wallet)
         RP_Portal->>RP_Portal: embed request into QRCode and provide an openid4vp-URI link for the request
-        Initiator->>+Company_Wallet: copy/paste openid4vp-URI link into the company wallet or scan the QRCode
+        Initiator->>+Supplier_Wallet: copy/paste openid4vp-URI link into the company wallet or scan the QRCode
     end                 
-    Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
-    Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
-    Company_Wallet->>RP_Portal: present the attestations
+    Supplier_Wallet<<->>Supplier_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
+    Supplier_Wallet<<->>Supplier_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
+    Supplier_Wallet->>RP_Portal: present the attestations
     RP_Portal<<->>RP_Wallet: verification of attestations (rulebook)
 ```
 
-### 1.4. KYS - Payment Information
-```mermaid
-sequenceDiagram
-    actor Initiator
-    RP_Portal<<->>RP_Wallet: generate proof-request
-    RP_Portal<<->>RP_Wallet: for IBAN  
-    alt Automatically (EUBW support end-points)
-        RP_Portal->>+Company_Wallet: request presentations
-    else Manually ( EUBW or EUDI Wallet)
-        RP_Portal->>RP_Portal: embed request into QRCode and provide an openid4vp-URI link for the request
-        Initiator->>+Company_Wallet: copy/paste openid4vp-URI link into the company wallet or scan the QRCode
-    end                 
-    Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
-    Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
-    Company_Wallet->>RP_Portal: present the attestations
-    RP_Portal<<->>RP_Wallet: verification of attestations (rulebook)
-```
-
-### 1.5. KYS - Additionally identifier Information  
-```mermaid
-sequenceDiagram
-    actor Initiator
-    RP_Portal<<->>RP_Wallet: generate proof-request
-    RP_Portal<<->>RP_Wallet: for DUNS, GS1, LEI 
-    RP_Portal<<->>RP_Wallet: in case that the company has site informaiton : SiteAttestation 
-    alt Automatically (EUBW support end-points)
-        RP_Portal->>+Company_Wallet: request presentations
-    else Manually ( EUBW or EUDI Wallet)
-        RP_Portal->>RP_Portal: embed request into QRCode and provide an openid4vp-URI link for the request
-        Initiator->>+Company_Wallet: copy/paste openid4vp-URI link into the company wallet or scan the QRCode
-    end                 
-    Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
-    Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
-    Company_Wallet->>RP_Portal: present the attestations
-    RP_Portal<<->>RP_Wallet: verification of attestations (rulebook)
-```
-
-### 1.6. KYS - CDD Information  (this will be handled in the MVP+)
+### 1.4. KYC - Customer Due Diligence  Information
 ```mermaid
 sequenceDiagram
     actor Initiator
     RP_Portal<<->>RP_Wallet: generate proof-request
     RP_Portal<<->>RP_Wallet: for OwnershipList,ControlList -> only the relevant KYS attributes ( GDPR conform)  
     alt Automatically (EUBW support end-points)
-        RP_Portal->>+Company_Wallet: request presentations
+        RP_Portal->>+Supplier_Wallet: request presentations
     else Manually ( EUBW or EUDI Wallet)
         RP_Portal->>RP_Portal: embed request into QRCode and provide an openid4vp-URI link for the request
-        Initiator->>+Company_Wallet: copy/paste openid4vp-URI link into the company wallet or scan the QRCode
+        Initiator->>+Supplier_Wallet: copy/paste openid4vp-URI link into the company wallet or scan the QRCode
     end                 
-    Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
-    Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
-    Company_Wallet->>RP_Portal: present the attestations
+    Supplier_Wallet<<->>Supplier_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
+    Supplier_Wallet<<->>Supplier_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
+    Supplier_Wallet->>RP_Portal: present the attestations
     RP_Portal<<->>RP_Wallet: verification of attestations (rulebook)
 ```
 
-### 1.7. Additionally KYS Information - relevant in Screening process (this will be handled in the MVP+)
+### 1.5. KYS - Additionally identifier Information
 ```mermaid
 sequenceDiagram
     actor Initiator
     RP_Portal<<->>RP_Wallet: generate proof-request
-    RP_Portal<<->>RP_Wallet: in case that the company required screening : TFS
-    RP_Portal<<->>RP_Wallet: in case that the company has ESG information :  ESG 
+    RP_Portal<<->>RP_Wallet: for DUNS, GS1, LEI 
     alt Automatically (EUBW support end-points)
-        RP_Portal->>+Company_Wallet: request presentations
+        RP_Portal->>+Supplier_Wallet: request presentations
     else Manually ( EUBW or EUDI Wallet)
         RP_Portal->>RP_Portal: embed request into QRCode and provide an openid4vp-URI link for the request
-        Initiator->>+Company_Wallet: copy/paste openid4vp-URI link into the company wallet or scan the QRCode
+        Initiator->>+Supplier_Wallet: copy/paste openid4vp-URI link into the company wallet or scan the QRCode
     end                 
-    Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
-    Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
-    Company_Wallet->>RP_Portal: present the attestations
+    Supplier_Wallet<<->>Supplier_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
+    Supplier_Wallet<<->>Supplier_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
+    Supplier_Wallet->>RP_Portal: present the attestations
+    RP_Portal<<->>RP_Wallet: verification of attestations (rulebook)
+```
+
+### 1.6. KYS - Payment Information
+```mermaid
+sequenceDiagram
+    actor Initiator
+    RP_Portal<<->>RP_Wallet: generate proof-request
+    RP_Portal<<->>RP_Wallet: for IBAN  
+    alt Automatically (EUBW support end-points)
+        RP_Portal->>+Supplier_Wallet: request presentations
+    else Manually ( EUBW or EUDI Wallet)
+        RP_Portal->>RP_Portal: embed request into QRCode and provide an openid4vp-URI link for the request
+        Initiator->>+Supplier_Wallet: copy/paste openid4vp-URI link into the company wallet or scan the QRCode
+    end                 
+    Supplier_Wallet<<->>Supplier_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
+    Supplier_Wallet<<->>Supplier_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
+    Supplier_Wallet->>RP_Portal: present the attestations
+    RP_Portal<<->>RP_Wallet: verification of attestations (rulebook)
+```
+
+
+### 1.7. Additionally KYS Screening Information (this will be handled in the MVP+)
+```mermaid
+sequenceDiagram
+    actor Initiator
+    RP_Portal<<->>RP_Wallet: generate proof-request
+    RP_Portal<<->>RP_Wallet: for TFS, ESG 
+    alt Automatically (EUBW support end-points)
+        RP_Portal->>+Supplier_Wallet: request presentations
+    else Manually ( EUBW or EUDI Wallet)
+        RP_Portal->>RP_Portal: embed request into QRCode and provide an openid4vp-URI link for the request
+        Initiator->>+Supplier_Wallet: copy/paste openid4vp-URI link into the company wallet or scan the QRCode
+    end                 
+    Supplier_Wallet<<->>Supplier_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
+    Supplier_Wallet<<->>Supplier_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
+    Supplier_Wallet->>RP_Portal: present the attestations
     RP_Portal<<->>RP_Wallet: verification of attestations (rulebook)
 ```
 

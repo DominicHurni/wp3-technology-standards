@@ -1,48 +1,47 @@
 # BU1 KYC_KYS MVP Workflow
 
 MVP Restrictions:
-## Company Perspective
+## Seller/Holder Perspective
 - Any person can trigger the process of customer onboarding
 - The company is authorized to present attestations and receive attestations (no configuration support)
 - Mutual authentication is set to default true (no TLOL or device-binding checks are applied).
 - The MVP process is executed sequentially in one step.
 
-## RelyingParty perspective
-- The company who wants to be customer will be classified as low/medium risk customer. It will be no high-risk customer  (therefore, e.g.: no sanction screening is required)
+## Buyer/RelyingParty Perspective 
+- The seller will be classified as low/medium risk customer. It will be no high-risk customer  (therefore, e.g.: no sanction screening is required)
 
 MVP+ Extension:
-## RelyingParty perspective
-- Additionally support for the KYC due diligence
-- Additionally support for the sanction list validation
+## Seller Perspective
+- Additionally support for the KYC sanction validation
 
 ## Pre-requisites
-This are the pre-requisites for the company in order to run the MVP.
+This are the pre-requisites for the company in order to run the MVP and MVP+
 
 ```mermaid
 sequenceDiagram
     participant Auth.Source 
     note right of Auth.Source : Bundesanzeiger, KVK, ...
     participant TAX_Administration 
-    participant Company
-    participant RelyingParty
+    participant Seller
+    participant Buyer
     participant SocialSecurityIssuer
 
-    Auth.Source ->> Company : issue EBWOID  
-    Auth.Source ->> Company : issue EUCC
-    Auth.Source ->> RelyingParty : issue EBWOID
+    Auth.Source ->> Seller : issue EBWOID  
+    Auth.Source ->> Seller : issue EUCC
+    Auth.Source ->> Buyer : issue EBWOID
     
-    alt PubEAA Issuer available
-        TAX_Administration ->> Company : issue TAX
+    alt EAA Issuer available
+        TAX_Administration ->> Seller : issue TAX
     else EAA attestation issuing
-        Company ->> Company: issue TAX
+        Seller ->> Seller: issue TAX
     end
     
-    Company ->> Company: issue VAT, CompanyInfo, ContactPerson
-    SocialSecurityIssuer->> Company: issue SocialSecurityAttestation 
-        
-    Note over Auth.Source ,RelyingParty: required for MVP+   
-    Company ->> Company: issue OwnershipList,ControlList
-    Company ->> Company: issue TFS 
+    Seller ->> Seller: issue VAT, CompanyInfo, ContactPerson
+    SocialSecurityIssuer->> Seller: issue SocialSecurityAttestation 
+    Seller ->> Seller: issue OwnershipList,ControlList
+            
+    Note over Auth.Source ,Buyer: required for MVP+   
+    Auth.Source ->> Seller: issue TFS
 ```
 
 ### 1. Scenario KYC 
@@ -52,23 +51,19 @@ sequenceDiagram
 sequenceDiagram
     actor Initiator
     activate Initiator
-    Initiator->>+RP_Portal: Select "start customer onboarding" Service
-    Initiator->>+RP_Portal: Fill the required contact information 
-    alt Wallet_Support_EndPoint (ex. EUBW DirectoryList)
-        RP_Portal->>+RP_Portal : Provide the list of available legal entities
-        Initiator->>+RP_Portal: select the legal entity from the list & the respective wallet address
-        RP_Portal->>+RP_Portal: resolve the endpoint of selected legal entity
-    else Wallet_Support_EndPoint (ex. Resolvable eAddress or public endpoint URI)
-        RP_Portal->>+RP_Portal : Provide an input field
-        Initiator->>+RP_Portal: fill the address or end-point of the business wallet
-        RP_Portal->>+RP_Portal: resolve eAddress
+    Initiator->>+Buyer_Portal: Select "start customer onboarding" Service
+    Initiator->>+Buyer_Portal: Fill the required contact information 
+    alt Wallet_Support_EndPoint (ex. Resolvable eAddress or public endpoint URI)
+        Buyer_Portal->>+Buyer_Portal : Provide an input field
+        Initiator->>+Buyer_Portal: fill the address or end-point of the business wallet
+        Buyer_Portal->>+Buyer_Portal: resolve eAddress
     else Support directly into EUBW  
-        Note over Company_Wallet: the company wallet already integrate the business process of specific relying party
-        Initiator->>+Company_Wallet: Select RP in the EUBW (configured in wallet)
+        Note over Seller_Wallet: the company wallet already integrate the business process of specific buyer
+        Initiator->>+Seller_Wallet: Select RP in the EUBW (configured in wallet)
     else Other: manual process (EUBW or EUDI Wallet)
-        Note over Company_Wallet: manuall proces by the Initiator
+        Note over Seller_Wallet: manuall proces by the Initiator
     end
-    Person->>+RP_Portal: trigger process
+    Person->>+Buyer_Portal: trigger process
 ```
 
 
@@ -77,83 +72,82 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor Initiator
-    RP_Portal<<->>RP_Wallet: generate proof-request
-    RP_Portal<<->>RP_Wallet: for EBWOID, EUCC, TAX, VAT
+    Buyer_Portal<<->>Buyer_Wallet: generate proof-request
+    Buyer_Portal<<->>Buyer_Wallet: for EBWOID, EUCC, TAX, VAT
     alt Automatically (EUBW support end-points)
-        RP_Portal->>+Company_Wallet: request presentations 
+        Buyer_Portal->>+Seller_Wallet: request presentations 
     else Manually ( EUBW or EUDI Wallet)
-        RP_Portal->>RP_Portal: embed request into QRCode and provide an openid4vp-URI for the request
-        Initiator->>+Company_Wallet: copy/paste openid4vp-URI into the company wallet or scan the QRCode
+        Buyer_Portal->>Buyer_Portal: embed request into QRCode and provide an openid4vp-URI for the request
+        Initiator->>+Seller_Wallet: copy/paste openid4vp-URI into the company wallet or scan the QRCode
     end
-    Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
-    Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own business configuration)
-    Company_Wallet->>RP_Portal: present the attestations
-    RP_Portal<<->>RP_Wallet: verification of attestations rulebooks
+    Seller_Wallet<<->>Seller_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
+    Seller_Wallet<<->>Seller_Wallet: check the authorization of requester to present requested attestations (own business configuration)
+    Seller_Wallet->>Buyer_Portal: present the attestations
+    Buyer_Portal<<->>Buyer_Wallet: verification of attestations rulebooks
 ```
 
 ### 1.3. KYC - Base Information
 ```mermaid
 sequenceDiagram
     actor Initiator
-    RP_Portal<<->>RP_Wallet: generate proof-request
-    RP_Portal<<->>RP_Wallet: for CompanyInfo, ContactPerson
-    RP_Portal<<->>RP_Wallet: in case of public procurement : SocialSecurityAttestation  
+    Buyer_Portal<<->>Buyer_Wallet: generate proof-request
+    Buyer_Portal<<->>Buyer_Wallet: for CompanyInfo, ContactPerson, ( SocialSecurityAttestation )
     alt Automatically (EUBW support end-points)
-        RP_Portal->>+Company_Wallet: request presentations
+        Buyer_Portal->>+Seller_Wallet: request presentations
     else Manually ( EUBW or EUDI Wallet)
-        RP_Portal->>RP_Portal: embed request into QRCode and provide an openid4vp-URI link for the request
-        Initiator->>+Company_Wallet: copy/paste openid4vp-URI link into the company wallet or scan the QRCode
+        Buyer_Portal->>Buyer_Portal: embed request into QRCode and provide an openid4vp-URI link for the request
+        Initiator->>+Seller_Wallet: copy/paste openid4vp-URI link into the company wallet or scan the QRCode
     end                 
-    Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
-    Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
-    Company_Wallet->>RP_Portal: present the attestations
-    RP_Portal<<->>RP_Wallet: verification of attestations (rulebook)
+    Seller_Wallet<<->>Seller_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
+    Seller_Wallet<<->>Seller_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
+    Seller_Wallet->>Buyer_Portal: present the attestations
+    Buyer_Portal<<->>Buyer_Wallet: verification of attestations (rulebook)
 ```
 
-### 1.4. KYC - CDD Information  (this will be handled in the MVP+)
+### 1.4. KYC - Customer Due Diligence  Information  
 ```mermaid
 sequenceDiagram
     actor Initiator
-    RP_Portal<<->>RP_Wallet: generate proof-request
-    RP_Portal<<->>RP_Wallet: for OwnershipList,ControlList -> only the relevant KYC attributes ( GDPR conform)  
+    Buyer_Portal<<->>Buyer_Wallet: generate proof-request
+    Buyer_Portal<<->>Buyer_Wallet: for OwnershipList,ControlList   
     alt Automatically (EUBW support end-points)
-        RP_Portal->>+Company_Wallet: request presentations
+        Buyer_Portal->>+Seller_Wallet: request presentations
     else Manually ( EUBW or EUDI Wallet)
-        RP_Portal->>RP_Portal: embed request into QRCode and provide an openid4vp-URI link for the request
-        Initiator->>+Company_Wallet: copy/paste openid4vp-URI link into the company wallet or scan the QRCode
+        Buyer_Portal->>Buyer_Portal: embed request into QRCode and provide an openid4vp-URI link for the request
+        Initiator->>+Seller_Wallet: copy/paste openid4vp-URI link into the company wallet or scan the QRCode
     end                 
-    Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
-    Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
-    Company_Wallet->>RP_Portal: present the attestations
-    RP_Portal<<->>RP_Wallet: verification of attestations (rulebook)
+    Seller_Wallet<<->>Seller_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
+    Seller_Wallet<<->>Seller_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
+    Seller_Wallet->>Buyer_Portal: present the attestations
+    Buyer_Portal<<->>Buyer_Wallet: verification of attestations (rulebook)
 ```
 
 ### 1.5. Additionally KYS Information - relevant in Screening process (this will be handled in the MVP+)
 ```mermaid
 sequenceDiagram
     actor Initiator
-    RP_Portal<<->>RP_Wallet: generate proof-request
-    RP_Portal<<->>RP_Wallet: in case that the company required screening : TFS
-    RP_Portal<<->>RP_Wallet: in case that the company has ESG information :  ESG 
+    Buyer_Portal<<->>Buyer_Wallet: generate proof-request
+    Buyer_Portal<<->>Buyer_Wallet: in case that the company required screening : TFS
+    Buyer_Portal<<->>Buyer_Wallet: in case that the company has ESG information :  ESG 
     alt Automatically (EUBW support end-points)
-        RP_Portal->>+Company_Wallet: request presentations
+        Buyer_Portal->>+Seller_Wallet: request presentations
     else Manually ( EUBW or EUDI Wallet)
-        RP_Portal->>RP_Portal: embed request into QRCode and provide an openid4vp-URI link for the request
-        Initiator->>+Company_Wallet: copy/paste openid4vp-URI link into the company wallet or scan the QRCode
+        Buyer_Portal->>Buyer_Portal: embed request into QRCode and provide an openid4vp-URI link for the request
+        Initiator->>+Seller_Wallet: copy/paste openid4vp-URI link into the company wallet or scan the QRCode
     end                 
-    Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
-    Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
-    Company_Wallet->>RP_Portal: present the attestations
-    RP_Portal<<->>RP_Wallet: verification of attestations (rulebook)
+    Seller_Wallet<<->>Seller_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
+    Seller_Wallet<<->>Seller_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
+    Seller_Wallet->>Buyer_Portal: present the attestations
+    Buyer_Portal<<->>Buyer_Wallet: verification of attestations (rulebook)
 ```
 
 ### 1.6. Cross-Check
 ```mermaid
 sequenceDiagram
     actor ContactPerson
-    RP_Portal<<->>RP_Portal: cross check over all attestations (to be defined exactly what will be checked)
-    RP_Portal->>+RP_InternalSystem: transfer data to internal system
+    Buyer_Portal<<->>Buyer_Portal: cross check over all attestations (to be defined exactly what will be checked)
+    Buyer_Portal->>+RP_InternalSystem: transfer data to internal system
     
-    RP_Portal->>ContactPerson: Send notification to the contact person that onboarding was successful.
-    RP_Portal<<->>RP_Portal: Display success notification for initiator
+    Buyer_Portal->>ContactPerson: Send notification to the contact person that onboarding was successful.
+    Buyer_Portal<<->>Buyer_Portal: Display success notification for initiator
 ```
