@@ -64,16 +64,16 @@ sequenceDiagram
     Initiator->>+RP_Portal: Select "start supplier onboarding" Service
     Initiator->>+RP_Portal: Fill the required contact information
     alt Wallet_Support_EndPoint (ex. EUBW DirectoryList)
-        Bank_Portal->>+Bank_Portal : Provide the list of available legal entities
-        Initiator->>+Bank_Portal: select the legal entity from the list & the respective wallet address
-        Bank_Portal->>+Bank_Portal: resolve the endpoint of selected legal entity
+        RP_Portal->>+RP_Portal : Provide the list of available legal entities
+        Initiator->>+RP_Portal: select the legal entity from the list & the respective wallet address
+        RP_Portal->>+RP_Portal: resolve the endpoint of selected legal entity
     else Wallet_Support_EndPoint (ex. Resolvable eAddress or public endpoint URI)
         RP_Portal->>+RP_Portal : Provide an input field
         Initiator->>+RP_Portal: fill the address or end-point of the business wallet
         RP_Portal->>+RP_Portal: resolve eAddress
     else Support directly into EUBW  
-        Note over Company_Wallet: the company wallet already integrate the business process of specific banks
-        Initiator->>+Company_Wallet: Select bank in the EUBW (configured in wallet)
+        Note over Company_Wallet: the company wallet already integrate the business process of specific relying party
+        Initiator->>+Company_Wallet: Select relying party in the EUBW (configured in wallet)
     else Other: manual process (EUBW or EUDI Wallet)
         Note over Company_Wallet: manuall proces by the Initiator
     end
@@ -86,8 +86,8 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor Initiator
-    RP_Portal<<->>Bank_Wallet: generate proof-request
-    RP_Portal<<->>Bank_Wallet: for EBWOID, EUCC,TAX, VAT
+    RP_Portal<<->>RP_Wallet: generate proof-request
+    RP_Portal<<->>RP_Wallet: for EBWOID, EUCC,TAX, VAT
     alt Automatically (EUBW support end-points)
         RP_Portal->>+Company_Wallet: request presentations 
     else Manually ( EUBW or EUDI Wallet)
@@ -97,15 +97,15 @@ sequenceDiagram
     Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
     Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own business configuration)
     Company_Wallet->>RP_Portal: present the attestations
-    RP_Portal<<->>Bank_Wallet: verification of attestations rulebooks
+    RP_Portal<<->>RP_Wallet: verification of attestations rulebooks
 ```
 
 ### 1.3. KYS - Base Information 
 ```mermaid
 sequenceDiagram
     actor Initiator
-    RP_Portal<<->>Bank_Wallet: generate proof-request
-    RP_Portal<<->>Bank_Wallet: for CompanyInfo, ContactPerson, PaymentTerms
+    RP_Portal<<->>RP_Wallet: generate proof-request
+    RP_Portal<<->>RP_Wallet: for CompanyInfo, ContactPerson, PaymentTerms
     alt Automatically (EUBW support end-points)
         RP_Portal->>+Company_Wallet: request presentations
     else Manually ( EUBW or EUDI Wallet)
@@ -115,15 +115,15 @@ sequenceDiagram
     Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
     Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
     Company_Wallet->>RP_Portal: present the attestations
-    RP_Portal<<->>Bank_Wallet: verification of attestations (rulebook)
+    RP_Portal<<->>RP_Wallet: verification of attestations (rulebook)
 ```
 
 ### 1.4. KYS - Payment Information
 ```mermaid
 sequenceDiagram
     actor Initiator
-    RP_Portal<<->>Bank_Wallet: generate proof-request
-    RP_Portal<<->>Bank_Wallet: for IBAN  
+    RP_Portal<<->>RP_Wallet: generate proof-request
+    RP_Portal<<->>RP_Wallet: for IBAN  
     alt Automatically (EUBW support end-points)
         RP_Portal->>+Company_Wallet: request presentations
     else Manually ( EUBW or EUDI Wallet)
@@ -133,16 +133,16 @@ sequenceDiagram
     Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
     Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
     Company_Wallet->>RP_Portal: present the attestations
-    RP_Portal<<->>Bank_Wallet: verification of attestations (rulebook)
+    RP_Portal<<->>RP_Wallet: verification of attestations (rulebook)
 ```
 
 ### 1.5. KYS - Additionally identifier Information  
 ```mermaid
 sequenceDiagram
     actor Initiator
-    RP_Portal<<->>Bank_Wallet: generate proof-request
-    RP_Portal<<->>Bank_Wallet: for DUNS, GS1, LEI 
-    RP_Portal<<->>Bank_Wallet: in case that the company has site informaiton : SiteAttestation 
+    RP_Portal<<->>RP_Wallet: generate proof-request
+    RP_Portal<<->>RP_Wallet: for DUNS, GS1, LEI 
+    RP_Portal<<->>RP_Wallet: in case that the company has site informaiton : SiteAttestation 
     alt Automatically (EUBW support end-points)
         RP_Portal->>+Company_Wallet: request presentations
     else Manually ( EUBW or EUDI Wallet)
@@ -152,15 +152,15 @@ sequenceDiagram
     Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
     Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
     Company_Wallet->>RP_Portal: present the attestations
-    RP_Portal<<->>Bank_Wallet: verification of attestations (rulebook)
+    RP_Portal<<->>RP_Wallet: verification of attestations (rulebook)
 ```
 
 ### 1.6. KYS - CDD Information  (this will be handled in the MVP+)
 ```mermaid
 sequenceDiagram
     actor Initiator
-    RP_Portal<<->>Bank_Wallet: generate proof-request
-    RP_Portal<<->>Bank_Wallet: for OwnershipList,ControlList -> only the relevant KYS attributes ( GDPR conform)  
+    RP_Portal<<->>RP_Wallet: generate proof-request
+    RP_Portal<<->>RP_Wallet: for OwnershipList,ControlList -> only the relevant KYS attributes ( GDPR conform)  
     alt Automatically (EUBW support end-points)
         RP_Portal->>+Company_Wallet: request presentations
     else Manually ( EUBW or EUDI Wallet)
@@ -170,16 +170,16 @@ sequenceDiagram
     Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
     Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
     Company_Wallet->>RP_Portal: present the attestations
-    RP_Portal<<->>Bank_Wallet: verification of attestations (rulebook)
+    RP_Portal<<->>RP_Wallet: verification of attestations (rulebook)
 ```
 
 ### 1.7. Additionally KYS Information - relevant in Screening process (this will be handled in the MVP+)
 ```mermaid
 sequenceDiagram
     actor Initiator
-    RP_Portal<<->>Bank_Wallet: generate proof-request
-    RP_Portal<<->>Bank_Wallet: in case that the company required screening : TFS
-    RP_Portal<<->>Bank_Wallet: in case that the company has ESG information :  ESG 
+    RP_Portal<<->>RP_Wallet: generate proof-request
+    RP_Portal<<->>RP_Wallet: in case that the company required screening : TFS
+    RP_Portal<<->>RP_Wallet: in case that the company has ESG information :  ESG 
     alt Automatically (EUBW support end-points)
         RP_Portal->>+Company_Wallet: request presentations
     else Manually ( EUBW or EUDI Wallet)
@@ -189,7 +189,7 @@ sequenceDiagram
     Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
     Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
     Company_Wallet->>RP_Portal: present the attestations
-    RP_Portal<<->>Bank_Wallet: verification of attestations (rulebook)
+    RP_Portal<<->>RP_Wallet: verification of attestations (rulebook)
 ```
 
 ### 1.8. Cross-Check  
@@ -197,7 +197,7 @@ sequenceDiagram
 sequenceDiagram
     actor ContactPerson
     RP_Portal<<->>RP_Portal: cross check over all attestations (to be defined exactly what will be checked)
-    RP_Portal->>+Bank_InternalSystem: transfer data to internal system
+    RP_Portal->>+RP_InternalSystem: transfer data to internal system
 
     RP_Portal->>ContactPerson: Send notification to the contact person that onboarding was successful.
     RP_Portal<<->>RP_Portal: Display success notification for initiator
