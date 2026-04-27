@@ -16,7 +16,7 @@ MVP+ Extension:
 - Additionally support for the ESG Certificates 
 
 ## Pre-requisites
-This are the pre-requisites for the company in order to run the MVP and MVP+
+This are the pre-requisites for the company in order to run the MVP 
 
 ```mermaid
 sequenceDiagram

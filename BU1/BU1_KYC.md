@@ -15,7 +15,7 @@ MVP+ Extension:
 - Additionally support for the KYC sanction validation
 
 ## Pre-requisites
-1) This are the pre-requisites for the company in order to run the MVP 
+This are the pre-requisites for the company in order to run the MVP 
 
 ```mermaid
 sequenceDiagram
@@ -38,7 +38,7 @@ sequenceDiagram
     Buyer ->> Buyer: issue OwnershipList,ControlList
 ```
 
-2) This are the additionally pre-requisites for the company in order to run the MVP+
+This are the additionally pre-requisites for the company in order to run the MVP+
 ```mermaid
 sequenceDiagram
     participant SocialSecurityIssuer

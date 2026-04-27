@@ -32,14 +32,15 @@ sequenceDiagram
     participant Bank 
     Auth.Source ->> Company : issue EBWOID  
     Auth.Source ->> Company : issue EUCC
+    Auth.Source ->> Bank : issue EBWOID
     alt PubEAA Issuer available
         TAX_Administration ->> Company : issue TAX
     else EAA attestation issuing
         Company ->> Company: issue TAX
     end
     Company ->> Company: issue VAT, CompanyInfo, ContactPerson, SignatoryRights
-    Company ->> Company: issue OwnerList, CntrolList, UBO
-    Company ->> TransparencyRegister: submit the UBO 
+    Company ->> Company: issue OwnerList, CntrolList, UBOList
+    Company ->> TransparencyRegister: submit the UBOList
     Auth.Source ->> Bank : issue EBWOID
 ```
 
@@ -81,7 +82,7 @@ sequenceDiagram
     end
 ```
 
-### 1.3. LegalEntity Identification
+### 1.3. LegalEntity-Base Identification
 
 ```mermaid
 sequenceDiagram
@@ -113,16 +114,14 @@ sequenceDiagram
     end
 ```
 
-### 1.5. Additionally KYC information
+### 1.5. KYC - Customer Due Diligence Information
 
 ```mermaid
 sequenceDiagram
     actor Initiator
     Bank_Portal<<->>Bank_Wallet: generate proof-request
-    Bank_Portal<<->>Bank_Wallet: OwnershipList,Controllist,UBOList,SignatoryRights
+    Bank_Portal<<->>Bank_Wallet: OwnershipList,Controllist,UBOList
     alt Company is not a branch
-        Bank_Portal<<->>Bank_Wallet: generate proof-request
-        Bank_Portal<<->>Bank_Wallet: OwnershipList,Controllist,UBOList,SignatoryRights
         alt Automatically (EUBW support end-points)
             Bank_Portal->>+Company_Wallet: request presentations
         else Manually ( EUBW or EUDI Wallet)
@@ -141,10 +140,23 @@ sequenceDiagram
     Bank_Portal->>Bank_Portal: UBO List will be automatically accepted.
 ```
 
-### 1.6. UBOList from Transparency Register
+### 1.6. Signatory Rights and UBOList from Transparency Register
 
 ```mermaid
 sequenceDiagram
+    Bank_Portal<<->>Bank_Wallet: generate proof-request
+    Bank_Portal<<->>Bank_Wallet: SignatoryRights
+    alt Automatically (EUBW support end-points)
+        Bank_Portal->>+Company_Wallet: request presentations
+    else Manually ( EUBW or EUDI Wallet)
+        Bank_Portal->>Bank_Portal: embed request into QRCode and provide an openid4vp-URI link for the request
+        Initiator->>+Company_Wallet: copy/paste openid4vp-URI link into the company wallet or scan the QRCode
+    end                 
+    Company_Wallet<<->>Company_Wallet: mutual authentification ( x509 certificate or eubwoid rulebook)
+    Company_Wallet<<->>Company_Wallet: check the authorization of requester to present requested attestations (own bussiness configuration)
+    Company_Wallet->>Bank_Portal: present the attestations
+    Bank_Portal<<->>Bank_Wallet: verification of attestations (rulebook)
+    
     alt From Transparency Register
         Bank_Portal<<->>Bank_Wallet: generate request for UBOList (TR)
         Bank_Portal->>+Trans.Register: request presentations
@@ -182,7 +194,7 @@ sequenceDiagram
 ### 1.8. Sanction check (this will be handled in the MVP+)
 * This will be handled in the MVP+
 
-### 1.9. Cross-Check  
+### 1.9 Cross-Check  
 ```mermaid
 sequenceDiagram
     actor ContactPerson 
